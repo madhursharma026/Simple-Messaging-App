@@ -1,18 +1,68 @@
-import { useState } from 'react'
+import { gql, useMutation, useSubscription } from '@apollo/client'
+import { useEffect, useState } from 'react'
 import Chat from './components/Chat'
+
+const LOGIN_USER = gql`
+  mutation LoginUser($userId: String!, $partnerId: String!) {
+    loginUser(userId: $userId, partnerId: $partnerId)
+  }
+`
+
+const LOGOUT_USER = gql`
+  mutation LogoutUser($userId: String!) {
+    logoutUser(userId: $userId)
+  }
+`
+
+const USER_LOGGED_OUT = gql`
+  subscription UserLoggedOut($userId: String!) {
+    userLoggedOut(userId: $userId)
+  }
+`
 
 export default function Home() {
   const [senderId, setSenderId] = useState('')
   const [receiverId, setReceiverId] = useState('')
   const [startChat, setStartChat] = useState(false)
 
-  const handleStartChat = () => {
+  const [loginUser] = useMutation(LOGIN_USER)
+  const [logoutUser] = useMutation(LOGOUT_USER)
+
+  const { data: logoutSubData } = useSubscription(USER_LOGGED_OUT, {
+    variables: { userId: senderId },
+    skip: !startChat,
+  })
+
+  useEffect(() => {
+    if (logoutSubData?.userLoggedOut === receiverId) {
+      alert('User has logged out. Ending chat.')
+      handleLogout()
+    }
+  }, [logoutSubData])
+
+  const handleStartChat = async () => {
     if (senderId.trim() && receiverId.trim()) {
-      setStartChat(true)
+      try {
+        await loginUser({
+          variables: {
+            userId: senderId,
+            partnerId: receiverId,
+          },
+        })
+
+        setStartChat(true)
+      } catch (error) {
+        alert(error.message)
+      }
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutUser({ variables: { userId: senderId } })
+    } catch (error) {
+      console.error('Logout error:', error.message)
+    }
     setSenderId('')
     setReceiverId('')
     setStartChat(false)
