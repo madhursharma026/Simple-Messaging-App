@@ -23,6 +23,8 @@ type Query {
 type Mutation {
   sendMessage(createMessageInput: CreateMessageInput!): Message!
   markAsRead(messageId: Float!): Message!
+  loginUser(userId: String!, partnerId: String!): Boolean!
+  logoutUser(userId: String!): Boolean!
 }
 
 input CreateMessageInput {
@@ -34,4 +36,5 @@ input CreateMessageInput {
 type Subscription {
   messageSent(sender_id: String!, receiver_id: String!): Message!
   messageRead(sender_id: String!, receiver_id: String!): Message!
+  userLoggedOut(userId: String!): String!
 }

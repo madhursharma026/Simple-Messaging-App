@@ -62,4 +62,24 @@ export class ChatResolver {
   ): Promise<Message[]> {
     return this.chatService.getMessages(sender_id, receiver_id);
   }
+
+  @Mutation(() => Boolean)
+  async loginUser(
+    @Args('userId') userId: string,
+    @Args('partnerId') partnerId: string,
+  ): Promise<boolean> {
+    await this.chatService.loginUser(userId, partnerId);
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  async logoutUser(@Args('userId') userId: string): Promise<boolean> {
+    await this.chatService.logoutUser(userId);
+    return true;
+  }
+
+  @Subscription(() => String)
+  userLoggedOut(@Args('userId') userId: string) {
+    return this.chatService.getPubSub().asyncIterableIterator('userLoggedOut');
+  }
 }
